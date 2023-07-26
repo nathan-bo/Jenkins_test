@@ -1,7 +1,5 @@
 pipeline {
-    agent {
-        label "!built-in" // it's considered a bad practice to build on the master/built-in node
-    }
+    agent any
     tools {
         maven 'maven'
     }
@@ -29,20 +27,33 @@ pipeline {
         )
     }
     stages {
-        stage("Checkout"){
-            steps{
-                env.FAILED_STAGE = env.STAGE_NAME
-                echo " ${env.STAGE_NAME} Stage ".center(61, '=')
-                echo "Checking out the repository..."
-                checkout scm
+        stage('Checkout') {
+            steps {
+                script {
+                    env.FAILED_STAGE = env.STAGE_NAME
+                    echo " ${env.STAGE_NAME} Stage ".center(61, '=')
+                    echo "Checking out the repository..."
+                    checkout scm
+                }
             }
         }
-        stage('Build App') { 
+        stage('Build') { 
             steps {
-                env.FAILED_STAGE = env.STAGE_NAME
-                echo " ${env.STAGE_NAME} Stage ".center(61, '=')
-                echo "Building the app using maven..."
-                sh 'mvn -B -DskipTests clean package'
+                script {
+                    env.FAILED_STAGE = env.STAGE_NAME
+                    echo " ${env.STAGE_NAME} Stage ".center(61, '=')
+                    echo "Building the app using maven..."
+                    sh 'mvn -B -DskipTests clean package'
+                }
+            }
+        }
+        stage('Test') {
+            when { anyOf {
+                expression { BRANCH_NAME == 'master' }
+                expression { BRANCH_NAME ==~ 'QA/*' }
+            } }
+            steps {
+                mvn test
             }
         }
     }
@@ -57,3 +68,4 @@ pipeline {
         }
     }
 }
+// link to the Jenkinsfile: https://github.com/nathan-bo/simple-java-maven-app/blob/master/jenkins/Jenkinsfile
