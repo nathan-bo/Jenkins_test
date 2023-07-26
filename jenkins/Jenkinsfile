@@ -43,7 +43,7 @@ pipeline {
                     env.FAILED_STAGE = env.STAGE_NAME
                     echo " ${env.STAGE_NAME} Stage ".center(61, '=')
                     echo "Building the app using maven..."
-                    echo env.BRANCH_NAME
+                    echo "${env.BRANCH_NAME}"
                     sh 'mvn -B -DskipTests clean package'
                 }
             }
